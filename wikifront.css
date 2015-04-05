@@ -1,0 +1,21 @@
+@import url(http://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic,900,900italic);
+body {
+    width: 720px;
+    margin: 1em auto;
+    font: 400 14pt/1.25 Merriweather;
+    background: #eee;
+    color: #444;
+}
+input {
+    border: none;
+    border-bottom: 1px solid #ccc;
+    font: inherit;
+    background: #eee;
+}
+h1 {
+    font-size: 24pt;
+    font-weight: 900;
+}
+article {
+    background: #fff;
+}
