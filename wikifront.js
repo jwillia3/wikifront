@@ -110,6 +110,7 @@ function renderWiki(name, wiki) {
 function openPage(name, target) {
     var dom = document.querySelector(target || '#main');
     var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
     xhr.open('GET', indexUrl + encodeURI(name), true);
     xhr.onreadystatechange = function() {
         if (this.readyState != this.DONE) return;

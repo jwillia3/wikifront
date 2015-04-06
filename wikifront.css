@@ -3,25 +3,34 @@ body {
     width: 720px;
     margin: 1em auto;
     font: 400 10pt/1.5 Merriweather;
-    background: #eee;
+    background: #fff;
     color: #666;
 }
 input {
     border: none;
     border-bottom: 1px solid #ccc;
     font: inherit;
-    background: #eee;
+    background: inherit;
+    color: inherit;
 }
 h1 {
     text-align: center;
     font-size: 28pt;
     font-weight: 900;
 }
+h1, h2 {
+    color: #4ac;
+}
+a:link, a:visited, a:active {
+    color: #a84;
+}
+
 td {
     padding: .25em;
 }
 code, pre {
-    font: bold 12pt Consolas;
+    font: 10pt Courier Prime, Courier New;
+    color: #000;
 }
 aside {
     box-sizing: border-box;
@@ -30,6 +39,8 @@ aside {
     float: right;
     clear: right;
     width: 230px;
-    border: 1px solid #aaa;
     font-size: 75%;
+}
+article {
+    background: #fff;
 }
