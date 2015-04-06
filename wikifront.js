@@ -44,33 +44,42 @@ function renderWiki(name, wiki) {
             .replace(/\[([^ ]+) (.*)]/g, formatExternalLink)
             .replace(/'''(.*?)'''/g, '<b>$1</b>')
             .replace(/''(.*?)''/g, '<i>$1</i>')
-            .replace(/\{\{start date and age\|(.*?)}}/g, '$1')
+            .replace(/\{\{start date and age\|(.*?)}}/ig, '$1')
             .replace(/{{Citation needed.*?}}/ig, '<sup>[Citation Needed]</sup>')
             .replace(/{{About\|(.*?)}}/ig, formatDisambiguation)
             .replace(/{{r\|reader}}/g, '')
+            .replace(/{{lowercase\|(.+?)}}/g, function(_,i) { return i.toLowerCase(); })
     }
     function renderLine(line) {
-        return !line? setMode() + '<p>':
-            /^----/.test(line)? setMode() + '<hr>':
-            /{{Infobox/.test(line)? setMode('infobox'):
-                mode=='infobox' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
+        var open = line.indexOf('{{');
+        var close = line.indexOf('}}');
+        if (close != -1 && open == -1) {
+            var before = line.substring(0, close);
+            var after = line.substring(close + 2);
+            return (before? renderLine(before): '') + '\n' +
+                (after? renderLine(after): '') + '\n';
+        }
+        
+        return !line? setMode('') + '<br><br>':
+            /^----/.test(line)? setMode('') + '<hr>':
+            /{{infobox/i.test(line)? setMode('infobox'):
+            mode=='infobox' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
                     '<tr><td>' + renderField(m[1]||'') +
                     '</td><td>' + renderField(m[2]||'') + '</td></tr>':
-            /{{cite/.test(line)? setMode('cite'):
-                mode=='cite' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
+            /{{cite/i.test(line)? setMode('cite'):
+            mode=='cite' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
                     formatReference(renderField(m[1]), renderField(m[2])):
-            /^}}/.test(line)? setMode():
             /^ /.test(line)? setMode('pre') + renderField(line):
             /^\;/.test(line)? '<b>' + renderField(line.substring(1)) + '</b>':
             /^\*/.test(line)? setMode('*') + '<li>' + renderField(line.substring(1)):
             /^#/.test(line)? setMode('#') + '<li>' + renderField(line.substring(1)):
-            (m = /^======([^=]+)======$/.exec(line))? setMode() + '<h6>' + m[1] + '</h6>':
-            (m = /^=====([^=]+)=====$/.exec(line))? setMode() + '<h5>' + m[1] + '</h5>':
-            (m = /^====([^=]+)====$/.exec(line))? setMode() + '<h4>' + m[1] + '</h4>':
-            (m = /^===([^=]+)===$/.exec(line))? setMode() + '<h3>' + m[1] + '</h3>':
-            (m = /^==([^=]+)==$/.exec(line))? setMode() + '<h2>' + m[1] + '</h2>':
-            (m = /^=([^=]+)=$/.exec(line))? setMode() + '<h1>' + m[1] + '</h1>':
-            setMode() + renderField(line);
+            (m = /^======([^=]+)======$/.exec(line))? setMode('') + '<h6>' + m[1] + '</h6>':
+            (m = /^=====([^=]+)=====$/.exec(line))? setMode('') + '<h5>' + m[1] + '</h5>':
+            (m = /^====([^=]+)====$/.exec(line))? setMode('') + '<h4>' + m[1] + '</h4>':
+            (m = /^===([^=]+)===$/.exec(line))? setMode('') + '<h3>' + m[1] + '</h3>':
+            (m = /^==([^=]+)==$/.exec(line))? setMode('') + '<h2>' + m[1] + '</h2>':
+            (m = /^=([^=]+)=$/.exec(line))? setMode('') + '<h1>' + m[1] + '</h1>':
+            setMode('') + renderField(line);
     }
     function setMode(newMode) {
         var same = mode == newMode;
@@ -104,7 +113,9 @@ function renderWiki(name, wiki) {
         .replace(/<!--(.|\n)*?-->/g, '')
         .replace(/<[/]?syntaxhighlight/g, '<code')
     
-    return wiki.split('\n').map(renderLine).join('\n');
+    var lines = wiki.split('\n').map(renderLine);
+    lines.forEach(function (i) { console.log(i); });
+    return lines.join('\n').replace(/<\/a>s/g, 's</a>');
 }
 
 function openPage(name, target) {
@@ -114,7 +125,6 @@ function openPage(name, target) {
     dom.type = 'text/javascript';
     dom.src = indexUrl + encodeURI(name) + '&format=json&callback=receivedWiki';
     document.head.appendChild(dom);
-    console.log(dom);
 }
 function receivedWiki(json) {
     var wiki = json.query.pages[Object.keys(json.query.pages)].revisions[0]['*'];
