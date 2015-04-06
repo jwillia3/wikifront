@@ -115,7 +115,6 @@ function openPage(name, target) {
     xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
     xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
     xhr.setRequestHeader('Accept', 'text/x-wiki');
-    xhr.setRequestHeader('Accept-Charset', 'UTF-8');
     xhr.onreadystatechange = function() {
         if (this.readyState != this.DONE) return;
         dom.querySelector('.title').innerHTML = name;
