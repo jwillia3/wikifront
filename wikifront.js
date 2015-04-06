@@ -110,19 +110,32 @@ function renderWiki(name, wiki) {
 function openPage(name, target) {
     var dom = document.querySelector(target || '#main');
     var origin = window.location.host? '&origin=http://' + window.location.host: '';
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-    xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
-    xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
-    xhr.onreadystatechange = function() {
-        if (this.readyState != this.DONE) return;
-        dom.querySelector('.title').innerHTML = name;
-        if (this.status != '200') {
-            dom.querySelector('.copy').innerHTML = name;
-        }
-        dom.querySelector('.copy').innerHTML = renderWiki(name, this.responseText);
-    }
-    xhr.send();
+//    var xhr = new XMLHttpRequest();
+//    xhr.withCredentials = true;
+//    xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
+//    xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
+//    xhr.setRequestHeader('Content-Type', 'text/x-wiki; charset=UTF-8');
+//    xhr.onreadystatechange = function() {
+//        if (this.readyState != this.DONE) return;
+//        dom.querySelector('.title').innerHTML = name;
+//        if (this.status != '200') {
+//            dom.querySelector('.copy').innerHTML = name;
+//        }
+//        dom.querySelector('.copy').innerHTML = renderWiki(name, this.responseText);
+//    }
+//    xhr.send();
+    $.ajax(indexUrl + encodeURI(name) + origin, {
+        async: true,
+        accept: 'text/x-wiki/',
+        crossDomain: true,
+        dataType: 'text',
+        headers: { 'Api-User-Agent': 'wikifront/1.0' },
+        success: function(text) {
+            dom.querySelector('.title').innerHTML = name;
+            dom.querySelector('.copy').innerHTML = renderWiki(name, text);
+        },
+        xhrFields: { withCredentials: true },
+    });
 }
 function wikiClickHandler() {
     openPage(event.target.title);
