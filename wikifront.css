@@ -2,9 +2,9 @@
 body {
     width: 720px;
     margin: 1em auto;
-    font: 400 14pt/1.25 Merriweather;
+    font: 400 11pt/1.5 Merriweather;
     background: #eee;
-    color: #444;
+    color: #666;
 }
 input {
     border: none;
@@ -13,9 +13,16 @@ input {
     background: #eee;
 }
 h1 {
-    font-size: 24pt;
+    text-align: center;
+    font-size: 28pt;
     font-weight: 900;
 }
 article {
-    background: #fff;
+    
+}
+aside {
+    box-sizing: border-box;
+    padding: 1em;
+    float: right;
+    border: 1px solid #aaa;
 }
