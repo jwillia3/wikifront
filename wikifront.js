@@ -114,6 +114,8 @@ function openPage(name, target) {
     xhr.withCredentials = true;
     xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
     xhr.onreadystatechange = function() {
+        if (this.readyState == this.OPEN)
+            xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
         if (this.readyState != this.DONE) return;
         dom.querySelector('.title').innerHTML = name;
         if (this.status != '200') {
