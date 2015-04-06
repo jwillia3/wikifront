@@ -109,9 +109,10 @@ function renderWiki(name, wiki) {
 
 function openPage(name, target) {
     var dom = document.querySelector(target || '#main');
+    var origin = window.location.host? '&origin=http://' + window.location.host: '';
     var xhr = new XMLHttpRequest();
     xhr.withCredentials = true;
-    xhr.open('GET', indexUrl + encodeURI(name), true);
+    xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
     xhr.onreadystatechange = function() {
         if (this.readyState != this.DONE) return;
         dom.querySelector('.title').innerHTML = name;
