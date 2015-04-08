@@ -1,4 +1,4 @@
-indexUrl = 'http://en.wikipedia.org/w/index.php?action=raw&title=';
+indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
 
 function renderWiki(name, wiki) {
@@ -25,7 +25,7 @@ function renderWiki(name, wiki) {
             
             switch (part[0]) {
             case 'about':
-                return makeWikiLink(part[0] + ' (disambiguation)',
+                return makeWikiLink(name + ' (disambiguation)',
                     leaf +
                     'This article is about ' + part[1] +
                     '. For other uses, see ' +
@@ -175,23 +175,17 @@ function renderWiki(name, wiki) {
 }
 
 function openPage(name, target) {
-    var dom = document.querySelector(target || '#main');
-    var origin = window.location.host? '&origin=http://' + window.location.host: '';
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-    xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
-    xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
-    xhr.setRequestHeader('Accept', 'text/x-wiki');
-    xhr.onreadystatechange = function() {
-        if (this.readyState != this.DONE) return;
-        dom.querySelector('.title').innerHTML = name;
-        if (this.status != '200') {
-            dom.querySelector('.copy').innerHTML = name;
-        }
-        dom.querySelector('.copy').innerHTML = renderWiki(name, this.responseText);
-        window.scrollTo(0, 0);
-    }
-    xhr.send();
+    window.name = name;
+    document.querySelector('#main').querySelector('.title').innerHTML = name;
+    var dom = document.createElement('script');
+    dom.type = 'text/javascript';
+    dom.src = indexUrl + encodeURI(name) + '&format=json&callback=receivedWiki';
+    document.head.appendChild(dom);
+}
+function receivedWiki(json) {
+    var wiki = json.query.pages[Object.keys(json.query.pages)].revisions[0]['*'];
+    document.querySelector('#main > .copy').innerHTML = renderWiki(name, wiki);
+    window.scrollTo(0, 0);
 }
 function wikiClickHandler() {
     openPage(event.target.title);
