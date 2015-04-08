@@ -1,134 +1,197 @@
-indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&titles=';
+indexUrl = 'http://en.wikipedia.org/w/index.php?action=raw&title=';
 linkBase = 'http://en.wikipedia.org/wiki/';
 
 function renderWiki(name, wiki) {
-    var mode = '';
-    var citation = 0;
-    var i, m;
-    
-    function formatWikiLink(all, link, text) {
-        return '<a title="' + link + '" onclick=wikiClickHandler() ' +
-            'href=' + linkBase + encodeURI(link) + '>' +
-            (text || link) + '</a>';
+    // See http://www.mediawiki.org/wiki/Markup_spec#Parser_outline
+    function todo(all) {
+        return '<span style=color:white;background:red> ... </span>';
     }
-    function formatExternalLink(all, link, text) {
-        return '<a href=' + link + '>' + (text || link) + '</a>';
+    var extracts = [];
+    function makeWikiLink(url, name) {
+        return '<a title="' + url + '" onclick=wikiClickHandler() ' +
+            ' href=' + linkBase + encodeURIComponent(url) + '>' +
+            name + '</a>';
     }
-    function formatImage(all, link, size, text) {
-        return '<aside style=width:' + size + '>' +
-            ' <img src=' + linkBase + 'File:' + (link || '').replace(/ /g, '_') + '>' +
-            text + '</aside>';
+    function makeExternalLink(href, name) {
+        return '<a class=external href=' + href + '>' + name + '</a>';
     }
-    function formatDisambiguation(all, about) {
-        return 'This article is about ' +
-            name + (about? ' ' + about: '') + 
-            '. For other uses see ' +
-            formatWikiLink(null, name + ' (disambiguation)', name + ' (disambiguation)') + '.';
-    }
-    function formatReference(key, value) {
-        return key == 'url'? '<a href=' + value + '>Link</a>':
-            key == 'title'? '<b>' + value + '</b>':
-            key == 'accessdate'? '':
-            key == 'quote'? '<quote class=cite>' + value + '</quote>':
-            value + '<br>';
-    }
-    function renderField(field) {
-        return field
-            // Magic Words
-            // ISBN, RFC, PMID, Magic Links etc.
-            // {{VARIABLE}}
-            .replace(/~*/g, '') // user names
-            .replace(/\[\[([^|\]]+?)\|([^|\]]+?)\|([^|\]]+?)]]()/g, formatWikiLink)
-            .replace(/\[\[([^|\]]+?)\|([^|\]]+?)]]()/g, formatWikiLink)
-            .replace(/\[\[(.+?)]]()()/g, formatWikiLink)
-            .replace(/\[([^ ]+) (.*)]/g, formatExternalLink)
-            .replace(/'''(.*?)'''/g, '<b>$1</b>')
-            .replace(/''(.*?)''/g, '<i>$1</i>')
-            .replace(/\{\{start date and age\|(.*?)}}/ig, '$1')
-            .replace(/{{Citation needed.*?}}/ig, '<sup>[Citation Needed]</sup>')
-            .replace(/{{About\|(.*?)}}/ig, formatDisambiguation)
-            .replace(/{{r\|reader}}/g, '')
-            .replace(/{{lowercase\|(.+?)}}/g, function(_,i) { return i.toLowerCase(); })
-    }
-    function renderLine(line) {
-        var open = line.indexOf('{{');
-        var close = line.indexOf('}}');
-        if (close != -1 && open == -1) {
-            var before = line.substring(0, close);
-            var after = line.substring(close + 2);
-            return (before? renderLine(before): '') + '\n' +
-                (after? renderLine(after): '') + '\n';
+    function preprocessStep(wiki) {
+        var replacements = [];
+        var nReplacements = 0;
+        var leaf = '<span class=wingding>&#x0096;</span>';
+        function handleTemplates(all, wiki) {
+            var part = wiki.split('|');
+            part[0] = part[0].toLowerCase().trim();
+            
+            switch (part[0]) {
+            case 'about':
+                return makeWikiLink(part[0] + ' (disambiguation)',
+                    leaf +
+                    'This article is about ' + part[1] +
+                    '. For other uses, see ' +
+                        name + ' (Disambiguation).');
+            case 'citation needed': //TODO citations
+                return '<sup>Citation Needed</sup>';
+            case 'lowercase': //TODO what is this?
+                return '';
+            case 'not a typo': //TODO citations
+                return part.slice(1).join('|');
+            case 'portal':
+            case 'wikibooks':
+                return makeWikiLink(part[1],
+                    leaf + part[1] + ' ' + part[0]);    
+            case 'r': // TODO short references?
+                return '<sup>See ' + part[1] + '</sup>';
+            case 'reflist': // TODO reflist
+                return '';
+            case 'start date and age':
+                return part[1];
+            default:
+                if (/-stub$/i.test(wiki)) // ignore stubs
+                    return '';
+                if (/^cite/i.test(wiki)) // ignore stubs
+                    return '<aside class=citation>' +
+                        wiki.split('\n|').map(function(row) {
+                            row = row.split(/ *= */);
+                            row[0] = row[0].toLowerCase().trim();
+                            if (row.length != 2) return '';
+                            return row[0] == 'title'? '<b>' + row[1] + '</b>':
+                                row[0] == 'quote'? '<i>' + row[1] + '</i>':
+                                row[0] == 'url'? '<a href=' + row[1] + '>' + row[1] + '</a>':
+                                row[0] == 'accessdate'? '':
+                                row[1];
+                        }).join('<br>') + '</aside>';
+                if (/commands$/.test(wiki))
+                    return makeWikiLink(wiki, leaf + wiki);
+                if (/^infobox/i.test(wiki))
+                    return '<aside><table>' +
+                        wiki.split('\n|').map(function(row) {
+                            row = row.split(/ *= */);
+                            return row.length == 2?
+                                '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td></tr>':
+                                '';
+                        }).join('') + '</table></aside>';
+            }
+            console.info('Template:', part[0]);
+            return todo(wiki); //TODO: handle templates
+        }
+        function replace(all, wiki) {
+            replacements.push(handleTemplates(all, wiki));
+            nReplacements++;
+            return '\x1a' + String.fromCharCode(replacements.length - 1);
+        }
+        function expand(subst) {
+            var i = subst.charCodeAt(1);
+            nReplacements++;
+            //TODO Fix embedded expansion of {{...}}
+            replacements[i] = replacements[i].replace(/\x1a./mg, expand);
+            return replacements[i];
         }
         
-        return !line? setMode('') + '<br><br>':
-            /^----/.test(line)? setMode('') + '<hr>':
-            /{{infobox/i.test(line)? setMode('infobox'):
-            mode=='infobox' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
-                    '<tr><td>' + renderField(m[1]||'') +
-                    '</td><td>' + renderField(m[2]||'') + '</td></tr>':
-            /{{cite/i.test(line)? setMode('cite'):
-            mode=='cite' && (m = /^ *\| *([^=]+) *= *(.+)$/.exec(line))?
-                    formatReference(renderField(m[1]), renderField(m[2])):
-            /^ /.test(line)? setMode('pre') + renderField(line):
-            /^\;/.test(line)? '<b>' + renderField(line.substring(1)) + '</b>':
-            /^\*/.test(line)? setMode('*') + '<li>' + renderField(line.substring(1)):
-            /^#/.test(line)? setMode('#') + '<li>' + renderField(line.substring(1)):
-            (m = /^======([^=]+)======$/.exec(line))? setMode('') + '<h6>' + m[1] + '</h6>':
-            (m = /^=====([^=]+)=====$/.exec(line))? setMode('') + '<h5>' + m[1] + '</h5>':
-            (m = /^====([^=]+)====$/.exec(line))? setMode('') + '<h4>' + m[1] + '</h4>':
-            (m = /^===([^=]+)===$/.exec(line))? setMode('') + '<h3>' + m[1] + '</h3>':
-            (m = /^==([^=]+)==$/.exec(line))? setMode('') + '<h2>' + m[1] + '</h2>':
-            (m = /^=([^=]+)=$/.exec(line))? setMode('') + '<h1>' + m[1] + '</h1>':
-            setMode('') + renderField(line);
+        wiki = wiki
+            .replace(/<!--[^]*?-->/mg, '') // strip HTML comments
+            //TODO: Subst
+            //TODO: MSG, MSGNW, RAW
+        // Templates can be nested
+        // Loop through the string replacing any templates with no children
+        // Process them and add them to the replacement list
+        // Output ASCII SUB and the index as two characters
+        // (e.g. \x1a\x01) for the second substitution to happen.
+        // Once all substitutions have been made, replace the SUB codes
+        // with the generated text.
+        do {
+            nReplacements = 0;
+            wiki = wiki.replace(/\{\{([^{}]+?)}}/mg, replace);
+        } while (nReplacements);
+        wiki = wiki.replace(/\x1a./mg, expand);
+        return wiki;
     }
-    function setMode(newMode) {
-        var same = mode == newMode;
-        var prefix =
-            same? '':
-            mode == 'table'? '</table>':
-            mode == 'infobox'? '</table></aside>':
-            mode == 'cite'? '</aside>':
-            mode == 'pre'? '</pre>':
-            mode == '*'? '</ul>':
-            mode == '#'? '</ol>':
-            '';
-        
-        if (newMode == 'cite' && !same)
-            citation++;
-            
-        mode = newMode || '';
-        
-        return prefix + (
-            same? '':
-            mode == 'table'? '<table>':
-            mode == 'infobox'? '<aside><table>':
-            mode == 'cite'? '<sup>' + citation + '</sup><aside class=ref>' + citation + '. ':
-            mode == 'pre'? '<pre>':
-            mode == '*'? '<ul>':
-            mode == '#'? '<ol>':
-            '');
+    function extractStep(wiki) {
+        function handleExtraction(all, nowiki) {
+            extracts.push(nowiki);
+            return '\x1a' + String.fromCharCode(extracts.length - 1);
+        }
+        return wiki
+            .replace(/<nowiki>([^]*?)<\/nowiki>/mg, handleExtraction)
+            .replace(/<pre>([^]*?)<\/pre>/mg, handleExtraction)
+            .replace(/<math>([^]*?)<\/math>/mg, handleExtraction)
+    }
+    function reintroductionStep(wiki) {
+        function handleReintroduction(subst) {
+            return extracts[subst.charCodeAt(1)];
+        }
+        return wiki.replace(/\x1a./mg, handleReintroduction);
+    }
+    function internalStep(wiki) {
+        function handleHeader(all, level, text) {
+            return '<h' + level.length + '>' + text + '</h' + level.length + '>';
+        }
+        function handleWikiLink(all, body) {
+            var part = body.split('|');
+            return part.length == 1? makeWikiLink(part[0], part[0]):
+                part.length == 2? makeWikiLink(part[0], part[1]):
+                makeWikiLink(part[0], part[0]); //TODO: wikilinks
+        }
+        function handleExternalLink(all, body) {
+            var split = body.indexOf(' ');
+            var url = split != -1? body.substring(0, split): body;
+            var name = split != -1? body.substring(split + 1): url;
+            return makeExternalLink(url, name);
+        }
+        return wiki
+            .replace(/^(=+)(.+?)=+/mg, handleHeader)
+            .replace(/'''''(.+?)'''''/mg, '<b><i>$1<i></b>')
+            .replace(/'''(.+?)'''/mg, '<b>$1</b>')
+            .replace(/''(.+?)''/mg, '<i>$1</i>')
+            .replace(/\[\[\[(.+?)]]]/mg, todo) //TODO: unknown link
+            .replace(/\[\[(.+?)]]/mg, handleWikiLink)
+            .replace(/\[(.+)?]/mg, handleExternalLink)
+            .replace(/__.+?__/mg, '') // ignore magic words
+    }
+    function blockStep(wiki) {
+        function handleList(all) {
+            return '<ul>' +
+                all.split('\n').map(function(line) {
+                    //TODO: handle nested lists
+                    return '<li>' + line.replace(/[*#:;]+/, '');
+                }) + '</ul>';
+        }
+        return wiki
+            .replace(/^( .*)+/gm, '<pre>$1</pre>')
+            .replace(/(?:^$)+/gm, '<p>')
+            .replace(/^(?:[*#:;]+.*?$)+/gm, handleList)
     }
     
+    
+    wiki = preprocessStep(wiki);
+    wiki = extractStep(wiki);
+    wiki = internalStep(wiki);
+    wiki = blockStep(wiki);
+    wiki = reintroductionStep(wiki);
     wiki = wiki
-        .replace(/<!--(.|\n)*?-->/g, '')
-        .replace(/<[/]?syntaxhighlight/g, '<code')
-    
-    var lines = wiki.split('\n').map(renderLine);
-    lines.forEach(function (i) { console.log(i); });
-    return lines.join('\n').replace(/<\/a>s/g, 's</a>');
+        .replace(/<\/a>s/gm, 's</a>') // Fix pluralisation
+        .replace(/<br>(\s*<br>)+/gm, '<br>')
+    return wiki;
 }
 
 function openPage(name, target) {
-    window.name = name;
-    document.querySelector('#main').querySelector('.title').innerHTML = name;
-    var dom = document.createElement('script');
-    dom.type = 'text/javascript';
-    dom.src = indexUrl + encodeURI(name) + '&format=json&callback=receivedWiki';
-    document.head.appendChild(dom);
-}
-function receivedWiki(json) {
-    var wiki = json.query.pages[Object.keys(json.query.pages)].revisions[0]['*'];
-    document.querySelector('#main > .copy').innerHTML = renderWiki(name, wiki);
+    var dom = document.querySelector(target || '#main');
+    var origin = window.location.host? '&origin=http://' + window.location.host: '';
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open('GET', indexUrl + encodeURI(name) + origin , true);
+    xhr.setRequestHeader('Api-User-Agent', 'wikifront/1.0');
+    xhr.setRequestHeader('Accept', 'text/x-wiki');
+    xhr.onreadystatechange = function() {
+        if (this.readyState != this.DONE) return;
+        dom.querySelector('.title').innerHTML = name;
+        if (this.status != '200') {
+            dom.querySelector('.copy').innerHTML = name;
+        }
+        dom.querySelector('.copy').innerHTML = renderWiki(name, this.responseText);
+        window.scrollTo(0, 0);
+    }
+    xhr.send();
 }
 function wikiClickHandler() {
     openPage(event.target.title);
