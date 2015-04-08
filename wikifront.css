@@ -3,8 +3,8 @@ body {
     width: 720px;
     margin: 1em auto;
     font: 400 13pt/1.5 Merriweather;
+
     background: #fff;
-    text-align: justify;
     color: #666;
 }
 input {
@@ -12,6 +12,7 @@ input {
     border-bottom: 1px solid #ccc;
     font: inherit;
     background: inherit;
+    font-feature
     color: inherit;
 }
 h1 {
@@ -20,8 +21,20 @@ h1 {
     font-weight: 900;
 }
 h1, h2 {
-    color: #4ac;
+    color: #48a;
+    font-weight: 900;
 }
+h1:before {
+    font-family: wingdings;
+    font-size: 200%;
+    content: '\009a\2002';
+}
+h1:after {
+    font-family: wingdings;
+    font-size: 200%;
+    content: '\2002\009b';
+}
+
 a:link, a:visited, a:active {
     color: #f84;
     text-decoration: none;
@@ -37,7 +50,7 @@ a[href*="Category%3A"] {
 }
 
 .wingding {
-    font-family: zapf dingbats, wingdings;
+    font-family: wingdings;
     font-size: 200%;
 }
 td {
@@ -54,7 +67,8 @@ aside {
     float: right;
     clear: right;
     width: 230px;
-    font-size: 75%;
+    color: #4ac;
+    font-size: 85%;
 }
 article {
     background: #fff;
