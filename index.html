@@ -5,8 +5,22 @@
     <link href=wikifront.css rel=stylesheet>
 </head>
 <body>
-    <nav>
+    <span id=menuButton>&nbsp;&#x2767;&nbsp;</span>
+    <nav id=top>
+        
         <input id=search placeholder=Title>
+        <section class=columns2>
+            <div>
+                <h3>Queue <span id=clearQueue>&#x2716;</span></h3>
+                <ul id=queue>
+                </ul>
+            </div>
+            <div>
+                <h3>History <span id=clearHistory>&#x2716;</span></h3>
+                <ul id=history>
+                </ul>
+            </div>
+        </section>
     </nav>
     <article id=main>
         <h1 class=title>Wikifront</h1>

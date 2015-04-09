@@ -1,17 +1,37 @@
 indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
-
+function makeWikiLink(url, name) {
+    return '<a title="' + url + '" onclick=wikiClickHandler() ' +
+        ' href=' + linkBase + encodeURIComponent(url) + '>' +
+        name + '</a>';
+}
+function clearHistory() {
+    document.querySelector('#history').innerHTML = '';
+}
+function clearQueue() {
+    document.querySelector('#history').innerHTML = '';
+}
+function deleteListItem(e) {
+    e.target.parentElement.style.backgroundColor = 'red';
+    e.target.parentElement.parentElement.removeChild(e.target.parentElement);
+}
+function insertIntoList(name, parent) {
+    var item = document.createElement('li');
+    item.innerHTML = '<span class=itemDelete onclick=deleteListItem(event)>&#x2716;</span>' + makeWikiLink(name, name);
+    parent.insertBefore(item, parent.firstChild);
+}
+function addToHistory(name) {
+    insertIntoList(name, document.querySelector('#history'));
+}
+function addToQueue(name) {
+    insertIntoList(name, document.querySelector('#queue'));
+}
 function renderWiki(name, wiki) {
     // See http://www.mediawiki.org/wiki/Markup_spec#Parser_outline
     function todo(all) {
         return '<span style=color:white;background:red> ... </span>';
     }
     var extracts = [];
-    function makeWikiLink(url, name) {
-        return '<a title="' + url + '" onclick=wikiClickHandler() ' +
-            ' href=' + linkBase + encodeURIComponent(url) + '>' +
-            name + '</a>';
-    }
     function makeExternalLink(href, name) {
         return '<a class=external href=' + href + '>' + name + '</a>';
     }
@@ -42,15 +62,18 @@ function renderWiki(name, wiki) {
                     leaf + part[1] + ' ' + part[0]);    
             case 'r': // TODO short references?
                 return '<sup>See ' + part[1] + '</sup>';
+            case 'refimprove':
+                return '';
             case 'reflist': // TODO reflist
                 return '';
+            case 'birth date and age':
             case 'start date and age':
                 return part[1];
             default:
                 if (/-stub$/i.test(wiki)) // ignore stubs
                     return '';
                 if (/^cite/i.test(wiki)) // ignore stubs
-                    return '<aside class=citation>' +
+                    return '<div class=citation>' +
                         wiki.split('\n|').map(function(row) {
                             row = row.split(/ *= */);
                             row[0] = row[0].toLowerCase().trim();
@@ -60,7 +83,7 @@ function renderWiki(name, wiki) {
                                 row[0] == 'url'? '<a href=' + row[1] + '>' + row[1] + '</a>':
                                 row[0] == 'accessdate'? '':
                                 row[1];
-                        }).join('<br>') + '</aside>';
+                        }).join('<br>') + '</div>';
                 if (/commands$/.test(wiki))
                     return makeWikiLink(wiki, leaf + wiki);
                 if (/^infobox/i.test(wiki))
@@ -162,21 +185,22 @@ function renderWiki(name, wiki) {
             .replace(/^(?:[*#:;]+.*?$)+/gm, handleList)
     }
     
-    
     wiki = preprocessStep(wiki);
     wiki = extractStep(wiki);
     wiki = internalStep(wiki);
     wiki = blockStep(wiki);
     wiki = reintroductionStep(wiki);
     wiki = wiki
-        .replace(/<\/a>s/gm, 's</a>') // Fix pluralisation
+        .replace(/<\/a>([-a-zA-Z']+)/gm, '$1</a>') // Fix pluralisation, past tense, whathaveyou
         .replace(/<br>(\s*<br>)+/gm, '<br>')
         .replace(/<ref([^\/]*?)\/>/gm, '<ref$1></ref>')
     return wiki;
 }
 
 function openPage(name, target) {
-    window.name = name;
+    if (window.wikiName)
+        addToHistory(window.wikiName);
+    window.wikiName = name;
     document.querySelector('#main').querySelector('.title').innerHTML = name;
     var dom = document.createElement('script');
     dom.type = 'text/javascript';
@@ -192,11 +216,33 @@ function wikiClickHandler() {
     openPage(event.target.title);
     event.preventDefault();
 }
-function handleSearchEnter() {
-    if (event.keyCode == 13)
-        openPage(this.value);
+function handleShortcuts() {
+    if (event.keyCode == 27 || event.ctrlKey && event.char == '\u000b') { // Escape, ^E, ^K
+        toggleMenu('visible');
+        var dom = document.querySelector('#search');
+        dom.value = '';
+        dom.focus();
+        event.preventDefault();
+        event.stopPropagation();
+    }
 }
-
+function handleSearchEnter() {
+    if (event.keyCode == 13) {
+        openPage(this.value);
+        toggleMenu('hidden');
+        event.preventDefault();
+        event.stopPropagation();
+    } else if (event.keyCode == 27) {
+        this.value = '';
+        toggleMenu('hidden');
+        event.preventDefault();
+        event.stopPropagation();
+    }
+}
+function toggleMenu(force) {
+    var dom = document.querySelector('#top');
+    dom.style.visibility = force || (dom.style.visibility == 'hidden'? 'visible': 'hidden');
+}
 function main() {
     if (!('toTitleCase' in String.prototype))
         String.prototype.toTitleCase = function() {
@@ -204,6 +250,11 @@ function main() {
                 function(all,init,rest) { return init.toUpperCase() + rest });
         }
     document.querySelector('#search').onkeydown = handleSearchEnter;
-    openPage('sed');
+    document.querySelector('#menuButton').addEventListener('click', toggleMenu);
+    document.addEventListener('keydown', handleShortcuts);
+    document.querySelector('#clearHistory').addEventListener('click', clearHistory);
+    document.querySelector('#clearQueue').addEventListener('click', clearQueue);
+    toggleMenu('visible');
+    document.querySelector('#search').focus();
 }
 document.addEventListener('DOMContentLoaded', main);
