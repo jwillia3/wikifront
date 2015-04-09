@@ -197,7 +197,7 @@ function renderWiki(name, wiki) {
     return wiki;
 }
 
-function openPage(name, target) {
+function openPage(name) {
     if (window.wikiName)
         addToHistory(window.wikiName);
     window.wikiName = name;
@@ -208,7 +208,7 @@ function openPage(name, target) {
     document.head.appendChild(dom);
 }
 function receivedWiki(json) {
-    var wiki = json.query.pages[Object.keys(json.query.pages)].revisions[0]['*'];
+    var wiki = json.query.pages[Object.keys(json.query.pages)[0]].revisions[0]['*'];
     document.querySelector('#main > .copy').innerHTML = renderWiki(name, wiki);
     window.scrollTo(0, 0);
 }
@@ -217,7 +217,7 @@ function wikiClickHandler() {
     event.preventDefault();
 }
 function handleShortcuts() {
-    if (event.keyCode == 27 || event.ctrlKey && event.char == '\u000b') { // Escape, ^E, ^K
+    if (event.keyCode == 27 || event.ctrlKey && event.char == '\u000b') { // Escape, ^K
         toggleMenu('visible');
         var dom = document.querySelector('#search');
         dom.value = '';
@@ -265,9 +265,10 @@ function main() {
             var x = i.split('=');
             query[x[0]] = x[1];
         });
-    if (query.q)
+    if (query.q) {
+        toggleMenu('hidden');
         openPage(query.q);
-    else {
+    } else {
         toggleMenu('visible');
         document.querySelector('#search').focus();
     }
