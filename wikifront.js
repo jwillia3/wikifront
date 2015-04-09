@@ -232,6 +232,7 @@ function handleSearchEnter() {
         toggleMenu('hidden');
         event.preventDefault();
         event.stopPropagation();
+        document.focus();
     } else if (event.keyCode == 27) {
         this.value = '';
         toggleMenu('hidden');
@@ -250,7 +251,7 @@ function main() {
                 function(all,init,rest) { return init.toUpperCase() + rest });
         }
     document.querySelector('#search').onkeydown = handleSearchEnter;
-    document.querySelector('#menuButton').addEventListener('click', toggleMenu);
+    document.querySelector('#menuButton').addEventListener('click', function() { toggleMenu() });
     document.addEventListener('keydown', handleShortcuts);
     document.querySelector('#clearHistory').addEventListener('click', clearHistory);
     document.querySelector('#clearQueue').addEventListener('click', clearQueue);
