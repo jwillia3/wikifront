@@ -64,15 +64,16 @@ function renderWiki(name, wiki) {
                 if (/commands$/.test(wiki))
                     return makeWikiLink(wiki, leaf + wiki);
                 if (/^infobox/i.test(wiki))
-                    return '<aside><table>' +
-                        wiki.split('\n|').map(function(row) {
+                    return '<aside><table class=infobox>' +
+                        wiki.split(/\n *?\|/).map(function(row) {
                             row = row.split(/ *= */);
                             return row.length == 2?
-                                '<tr><td>' + row[0] + '</td><td>' + row[1] + '</td></tr>':
+                                '<tr><td>' + row[0].replace('_', ' ').toTitleCase() +
+                                '</td><td>' + row[1] + '</td></tr>':
                                 '';
                         }).join('') + '</table></aside>';
             }
-            console.info('Template:', part[0]);
+            console.debug('Template:', part[0]);
             return todo(wiki); //TODO: handle templates
         }
         function replace(all, wiki) {
@@ -83,7 +84,6 @@ function renderWiki(name, wiki) {
         function expand(subst) {
             var i = subst.charCodeAt(1);
             nReplacements++;
-            //TODO Fix embedded expansion of {{...}}
             replacements[i] = replacements[i].replace(/\x1a./mg, expand);
             return replacements[i];
         }
@@ -171,6 +171,7 @@ function renderWiki(name, wiki) {
     wiki = wiki
         .replace(/<\/a>s/gm, 's</a>') // Fix pluralisation
         .replace(/<br>(\s*<br>)+/gm, '<br>')
+        .replace(/<ref([^\/]*?)\/>/gm, '<ref$1></ref>')
     return wiki;
 }
 
@@ -197,6 +198,11 @@ function handleSearchEnter() {
 }
 
 function main() {
+    if (!('toTitleCase' in String.prototype))
+        String.prototype.toTitleCase = function() {
+            return this.replace(/(\w)([^\s-]*)/gm,
+                function(all,init,rest) { return init.toUpperCase() + rest });
+        }
     document.querySelector('#search').onkeydown = handleSearchEnter;
     openPage('sed');
 }
