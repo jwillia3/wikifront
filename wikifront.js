@@ -255,7 +255,21 @@ function main() {
     document.addEventListener('keydown', handleShortcuts);
     document.querySelector('#clearHistory').addEventListener('click', clearHistory);
     document.querySelector('#clearQueue').addEventListener('click', clearQueue);
-    toggleMenu('visible');
-    document.querySelector('#search').focus();
+    var query = {};
+    window.location.search
+        .substring(1)
+        .replace(/\/$/, '') // IE will append / to http://host/?q=...
+        .split('&')
+        .map(decodeURIComponent)
+        .map(function(i) {
+            var x = i.split('=');
+            query[x[0]] = x[1];
+        });
+    if (query.q)
+        openPage(query.q);
+    else {
+        toggleMenu('visible');
+        document.querySelector('#search').focus();
+    }
 }
 document.addEventListener('DOMContentLoaded', main);
