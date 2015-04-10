@@ -29,7 +29,7 @@ function addToQueue(name) {
 function renderWiki(name, wiki) {
     // See http://www.mediawiki.org/wiki/Markup_spec#Parser_outline
     function todo(all) {
-        return '<span style=color:white;background:red> ... </span>';
+        return '<div class=unhandled onclick=toggleUnhandled()>&#x273f;<div>' + all + ' </div></div>';
     }
     var extracts = [];
     function makeExternalLink(href, name) {
@@ -124,6 +124,7 @@ function renderWiki(name, wiki) {
                 
                 return '<tr>' + wiki + '</tr>';
             }
+            //TODO nested tables e.g. ASCII#ASCII_control_code_chart
             var rows = wiki.split(/\|-/mg)
             var style = rows.shift();
             rows = rows.map(handleRow);
@@ -299,6 +300,11 @@ function handleSearchEnter() {
 function toggleMenu(force) {
     var dom = document.querySelector('#top');
     dom.style.visibility = force || (dom.style.visibility == 'hidden'? 'visible': 'hidden');
+}
+function toggleUnhandled() {
+    event.target.childNodes[1].style.display =
+        event.target.childNodes[1].style.display == 'block'?
+            'none': 'block';
 }
 function main() {
     if (!('toTitleCase' in String.prototype))

@@ -138,6 +138,18 @@ article {
     padding: 0 .5em;
     border-radius: 4px;
 }
+.unhandled {
+    display: inline-block;
+    cursor: default;
+    color: #fcc;
+}
+.unhandled > div {
+    padding: 2em;
+    display: none;
+    background: #fee;
+    font: 12pt consolas, monospace;
+    color: #666;
+}
 
 /* WIKIPEDIA STYLES */
 .floatright {
