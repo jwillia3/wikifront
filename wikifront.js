@@ -50,6 +50,8 @@ function renderWiki(name, wiki) {
                     'This article is about ' + part[1] +
                     '. For other uses, see ' +
                         name + ' (Disambiguation).');
+            case 'anchor':
+                return '<a id=' + part[1] + '></a>';
             case 'citation needed': //TODO citations
                 return '<sup>Citation Needed</sup>';
             case 'lowercase': //TODO what is this?
@@ -148,7 +150,7 @@ function renderWiki(name, wiki) {
     function internalStep(wiki) {
         function handleHeader(all, level, text) {
             return '<h' + level.length +
-                ' id=' + text.replace(/ /g, '_') + '-wiki>' +
+                ' id=' + text.replace(/ /g, '_').replace(/<.*>/, '') + '-wiki>' +
                 text + '</h' + level.length + '>';
         }
         function handleWikiLink(all, body) {
@@ -169,7 +171,7 @@ function renderWiki(name, wiki) {
             return makeExternalLink(url, name);
         }
         return wiki
-            .replace(/^(=+)(.+?)=+/mg, handleHeader)
+            .replace(/^(=+)(.+?)\1/mg, handleHeader)
             .replace(/'''''(.+?)'''''/mg, '<b><i>$1<i></b>')
             .replace(/'''(.+?)'''/mg, '<b>$1</b>')
             .replace(/''(.+?)''/mg, '<i>$1</i>')
