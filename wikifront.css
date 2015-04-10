@@ -134,3 +134,29 @@ article {
     border: 1px solid #888;
     border-radius: 4px;
 }
+
+/* WIKIPEDIA STYLES */
+.floatright {
+    float: right;
+}
+.wikitable {
+    border-collapse: collapse;
+    font-size: 80%;
+}
+.wikitable tr {
+    border-top: 1px solid #ccc;
+}
+.wikitable tr:first-child {
+    border-top: none;
+    border-bottom: 2px solid #ccc;
+}
+.wikitable td, .wikitable th {
+    padding: .125em .5em;
+    border-left: 1px solid #ccc;
+}
+.wikitable th {
+    font-size: 80%;
+}
+.wikitable td:first-child, .wikitable th:first-child {
+    border-left: none;
+}

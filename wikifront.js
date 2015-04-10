@@ -99,10 +99,25 @@ function renderWiki(name, wiki) {
                         }).join('') + '</table></aside>';
             }
             console.debug('Template:', part[0]);
-            return todo(wiki); //TODO: handle templates
+            return todo(wiki);
+        }
+        function handleTables(all, wiki) {
+            function handleRow(wiki) {
+                wiki = wiki
+                    .replace(/\|\|? +([^|]*) *\| *([^|]+)/mg, '<td $1>$2</td>')
+                    .replace(/\|\|? +([^|]*)/mg, '<td>$1</td>')
+                    .replace(/!!? +([^!]*)/mg, '<th>$1</th>')
+                
+                return '<tr>' + wiki + '</tr>';
+            }
+            var rows = wiki.split(/\|-/mg)
+            var style = rows.shift();
+            rows = rows.map(handleRow);
+            return '<table ' + style + '>' + rows.join('') + '</table>';
         }
         function replace(all, wiki) {
-            replacements.push(handleTemplates(all, wiki));
+            var handle = all[1] == '|'? handleTables: handleTemplates;
+            replacements.push(handle(all, wiki));
             nReplacements++;
             return '\x1a' + String.fromCharCode(replacements.length - 1);
         }
@@ -126,7 +141,7 @@ function renderWiki(name, wiki) {
         // with the generated text.
         do {
             nReplacements = 0;
-            wiki = wiki.replace(/\{\{([^{}]+?)}}/mg, replace);
+            wiki = wiki.replace(/\{[{|]([^{}]+?)[}|]}/mg, replace);
         } while (nReplacements);
         wiki = wiki.replace(/\x1a./mg, expand);
         return wiki;
