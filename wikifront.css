@@ -130,3 +130,7 @@ article {
 .infobox td:first-child {
     font-size: 80%;
 }
+.keypress {
+    border: 1px solid #888;
+    border-radius: 4px;
+}

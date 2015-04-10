@@ -55,7 +55,7 @@ function renderWiki(name, wiki) {
             case 'lowercase': //TODO what is this?
                 return '';
             case 'not a typo': //TODO citations
-                return part.slice(1).join('|');
+                return part.slice(1).join('|') + '<sup>(sic)</sup>';
             case 'portal':
             case 'wikibooks':
                 return makeWikiLink(part[1],
@@ -230,12 +230,12 @@ function receivedWiki(json) {
     if (typeof(html) == 'string') {
         document.querySelector('#main > .copy').innerHTML = html;
         var dom;
-        if (dom = document.getElementById((wikiTarget || '') + '-wiki'))
+        if (dom = document.getElementById((window.wikiTarget || '') + '-wiki'))
             dom.scrollIntoView();
         else
             window.scrollTo(0, 0);
     } else
-        openPageNoHistory(html.redirect);
+        openPageNoHistory(html.redirect + '#' + window.wikiTarget);
 }
 function wikiClickHandler() {
     openPage(event.target.title);
