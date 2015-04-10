@@ -54,8 +54,22 @@ function renderWiki(name, wiki) {
                 return '<a id=' + part[1] + '></a>';
             case 'citation needed': //TODO citations
                 return '<sup>Citation Needed</sup>';
+            case 'efn':
+            case 'refn': //TODO: handle separately
+            case 'efn-ua': //TODO: handle separately
+            case 'efn-lf': //TODO: handle separately
+            case 'efn-ur': //TODO: handle separately
+            case 'efn-lg': //TODO: handle separately
+                return '<aside class=note>' + part.slice(1).join('|') + '</aside>';
             case 'lowercase': //TODO what is this?
                 return '';
+            case 'main':
+                return '<div>' +
+                    makeWikiLink(part[1],
+                        leaf + 'See main article ' + part[1].toTitleCase()) +
+                    '</div>';
+            case 'keypress':
+                return '<span class=keypress>' + part.slice(1).join('|') + '</span>';
             case 'not a typo': //TODO citations
                 return part.slice(1).join('|') + '<sup>(sic)</sup>';
             case 'portal':
@@ -98,7 +112,7 @@ function renderWiki(name, wiki) {
                                 '';
                         }).join('') + '</table></aside>';
             }
-            console.debug('Template:', part[0]);
+            console.debug('Template:', wiki);
             return todo(wiki);
         }
         function handleTables(all, wiki) {
