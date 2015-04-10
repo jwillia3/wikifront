@@ -147,11 +147,17 @@ function renderWiki(name, wiki) {
     }
     function internalStep(wiki) {
         function handleHeader(all, level, text) {
-            return '<h' + level.length + '>' + text + '</h' + level.length + '>';
+            return '<h' + level.length +
+                ' id=' + text.replace(/ /g, '_') + '-wiki>' +
+                text + '</h' + level.length + '>';
         }
         function handleWikiLink(all, body) {
             var part = body.split('|');
             var type = part[0].toLowerCase();
+            // http://stackoverflow.com/a/4498885
+            //TODO: MD5 hash on filenames
+//            if (/^file:/.test(type) || /^image:/.test(type))
+//                return '<img src=' + linkBase + part[0] + '>';
             return part.length == 1? makeWikiLink(part[0], part[0]):
                 part.length == 2? makeWikiLink(part[0], part[1]):
                 makeWikiLink(part[0], part[0]);
@@ -207,6 +213,11 @@ function openPage(name) {
 }
 function openPageNoHistory(name) {
     window.wikiName = name;
+    window.wikiTarget = '';
+    name = name.replace(/^(.*?)#(.*?)$/, function(all, newName, anchor) {
+        window.wikiTarget = anchor;
+        return window.wikiName = newName;
+    });
     document.querySelector('#main').querySelector('.title').innerHTML = name;
     var dom = document.createElement('script');
     dom.type = 'text/javascript';
@@ -218,7 +229,11 @@ function receivedWiki(json) {
     var html = renderWiki(name, wiki);
     if (typeof(html) == 'string') {
         document.querySelector('#main > .copy').innerHTML = html;
-        window.scrollTo(0, 0);
+        var dom;
+        if (dom = document.getElementById((wikiTarget || '') + '-wiki'))
+            dom.scrollIntoView();
+        else
+            window.scrollTo(0, 0);
     } else
         openPageNoHistory(html.redirect);
 }
@@ -277,7 +292,7 @@ function main() {
         });
     if (query.q) {
         toggleMenu('hidden');
-        openPage(query.q);
+        openPage(query.q + (window.location.hash || ''));
     } else {
         toggleMenu('visible');
         document.querySelector('#search').focus();
