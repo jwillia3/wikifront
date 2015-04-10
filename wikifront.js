@@ -1,4 +1,4 @@
-indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&titles=';
+indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&callback=receivedWiki&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
 function makeWikiLink(url, name) {
     return '<a title="' + url + '" onclick=wikiClickHandler() ' +
@@ -151,9 +151,10 @@ function renderWiki(name, wiki) {
         }
         function handleWikiLink(all, body) {
             var part = body.split('|');
+            var type = part[0].toLowerCase();
             return part.length == 1? makeWikiLink(part[0], part[0]):
                 part.length == 2? makeWikiLink(part[0], part[1]):
-                makeWikiLink(part[0], part[0]); //TODO: wikilinks
+                makeWikiLink(part[0], part[0]);
         }
         function handleExternalLink(all, body) {
             var split = body.indexOf(' ');
@@ -184,9 +185,11 @@ function renderWiki(name, wiki) {
             .replace(/(?:^$)+/gm, '<p>')
             .replace(/^(?:[*#:;]+.*?$)+/gm, handleList)
     }
-    
     wiki = preprocessStep(wiki);
     wiki = extractStep(wiki);
+    var m;
+    if (m = /^#REDIRECT *\[\[(.*?)]]/im.exec(wiki))
+        return { redirect: m[1] };
     wiki = internalStep(wiki);
     wiki = blockStep(wiki);
     wiki = reintroductionStep(wiki);
@@ -200,17 +203,24 @@ function renderWiki(name, wiki) {
 function openPage(name) {
     if (window.wikiName)
         addToHistory(window.wikiName);
+    openPageNoHistory(name);
+}
+function openPageNoHistory(name) {
     window.wikiName = name;
     document.querySelector('#main').querySelector('.title').innerHTML = name;
     var dom = document.createElement('script');
     dom.type = 'text/javascript';
-    dom.src = indexUrl + encodeURI(name) + '&format=json&callback=receivedWiki';
+    dom.src = indexUrl + encodeURI(name);
     document.head.appendChild(dom);
 }
 function receivedWiki(json) {
     var wiki = json.query.pages[Object.keys(json.query.pages)[0]].revisions[0]['*'];
-    document.querySelector('#main > .copy').innerHTML = renderWiki(name, wiki);
-    window.scrollTo(0, 0);
+    var html = renderWiki(name, wiki);
+    if (typeof(html) == 'string') {
+        document.querySelector('#main > .copy').innerHTML = html;
+        window.scrollTo(0, 0);
+    } else
+        openPageNoHistory(html.redirect);
 }
 function wikiClickHandler() {
     openPage(event.target.title);
