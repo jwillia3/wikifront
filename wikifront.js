@@ -165,20 +165,12 @@ function renderWiki(name, wiki) {
         return wiki;
     }
     function extractStep(wiki) {
-        function handleExtraction(all, nowiki) {
-            extracts.push(encodeHtml(nowiki));
+        function handleExtraction(all, tag, rest, body) {
+            if (tag == 'nowiki' || tag == 'math') tag = 'span';
+            extracts.push('<' + tag + rest + '>' + encodeHtml(body) + '</' + tag + '>');
             return '\x1a' + String.fromCharCode(extracts.length - 1);
         }
-        function handleSourceExtraction(all, body) {
-            extracts.push('<pre>' + encodeHtml(body) + '</pre>');
-            return '\x1a' + String.fromCharCode(extracts.length - 1);
-        }
-        return wiki
-            .replace(/<nowiki>([^]*?)<\/nowiki>/mg, handleExtraction)
-            .replace(/<pre[^>]*>([^]*?)<\/pre>/mg, handleSourceExtraction)
-            .replace(/<code[^>]*>([^]*?)<\/code>/mg, handleSourceExtraction)
-            .replace(/<source[^>]*>([^]*?)<\/source>/mg, handleSourceExtraction)
-            .replace(/<math>([^]*?)<\/math>/mg, handleExtraction)
+        return wiki.replace(/<(pre|source|nowiki|math)([^>]*)>([^]*?)<\/\1>/mg, handleExtraction)
     }
     function reintroductionStep(wiki) {
         function handleReintroduction(subst) {
