@@ -6,7 +6,7 @@ body {
     background: #fff;
     color: #666;
     font-feature-settings: 'onum', 'zero';
-    ms-hyphens: auto;
+    -ms-hyphens: auto;
 }
 h1, h2, h3, h4, h5, h6 {
     font-family: Fira Sans;
@@ -49,6 +49,9 @@ h1:after {
     cursor: default;
     font-size: 72pt;
     z-index: 2;
+}
+#devOptions {
+    font-size: 50%;
 }
 #queue, #history {
     margin: 0px;

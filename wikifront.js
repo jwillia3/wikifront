@@ -1,11 +1,16 @@
 indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&callback=receivedWiki&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
+selfBase = window.location.origin + window.location.pathname;
+wikiName = '';
+wikiText = '';
+wikiTarget = '';
+
 function encodeHtml(text) {
     return text.replace(/&/mg, '&amp;').replace(/</mg, '&lt;').replace(/>/mg, '&gt;');
 }
 function makeWikiLink(url, name) {
     return '<a title="' + url + '" onclick=wikiClickHandler() ' +
-        ' href=' + linkBase + encodeURIComponent(url) + '>' +
+        ' href=' + selfBase + '?q=' + encodeURIComponent(url) + '>' +
         name + '</a>';
 }
 function clearHistory() {
@@ -115,7 +120,6 @@ function renderWiki(name, wiki) {
                                 '';
                         }).join('') + '</table></aside>';
             }
-            console.debug('Template:', wiki);
             return todo(wiki);
         }
         function handleTables(all, wiki) {
@@ -252,6 +256,7 @@ function openPageNoHistory(name) {
         return window.wikiName = newName;
     });
     document.querySelector('#main').querySelector('.title').innerHTML = name;
+    document.querySelector('#viewOnWikipedia').href = linkBase + encodeURIComponent(wikiName);
     var dom = document.createElement('script');
     dom.type = 'text/javascript';
     dom.src = indexUrl + encodeURI(name);
@@ -259,7 +264,8 @@ function openPageNoHistory(name) {
 }
 function receivedWiki(json) {
     var wiki = json.query.pages[Object.keys(json.query.pages)[0]].revisions[0]['*'];
-    var html = renderWiki(name, wiki);
+    var html = renderWiki(window.wikiName, wiki);
+    window.wikiText = wiki;
     if (typeof(html) == 'string') {
         document.querySelector('#main > .copy').innerHTML = html;
         var dom;
@@ -307,6 +313,9 @@ function toggleUnhandled() {
         event.target.childNodes[1].style.display == 'block'?
             'none': 'block';
 }
+function copyWikitext() {
+    window.clipboardData.setData('Text', window.wikiText);
+}
 function main() {
     if (!('toTitleCase' in String.prototype))
         String.prototype.toTitleCase = function() {
@@ -316,6 +325,7 @@ function main() {
     document.querySelector('#search').onkeydown = handleSearchEnter;
     document.querySelector('#menuButton').addEventListener('click', function() { toggleMenu() });
     document.addEventListener('keydown', handleShortcuts);
+    document.querySelector('#copyWikitext').addEventListener('click', function() { copyWikitext(); event.preventDefault(); });
     document.querySelector('#clearHistory').addEventListener('click', clearHistory);
     document.querySelector('#clearQueue').addEventListener('click', clearQueue);
     var query = {};

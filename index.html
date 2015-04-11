@@ -8,6 +8,12 @@
     <span id=menuButton>&#x2766;</span>
     <nav id=top>
         <input id=search placeholder=Title>
+        <div id=devOptions>
+            <a id=copyWikitext href=#>Copy Wikitext</a>
+            <br>
+            <a id=viewOnWikipedia href=#>View on Wikipedia</a>
+        </div>
+        
         <section class=columns2>
             <div>
                 <h3>Queue <span id=clearQueue>&#x2716;</span></h3>
@@ -24,6 +30,8 @@
     <article id=main>
         <h1 class=title>Wikifront</h1>
         <div class=copy></div>
+        <div class=wikiText>
+        </div>
     </article>
     <script src=wikifront.js></script>
     <script id=jsonpTarget></script>
