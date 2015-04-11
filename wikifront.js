@@ -211,7 +211,7 @@ function renderWiki(name, wiki) {
         }
         return wiki
             .replace(/^(=+)(.+?)\1/mg, handleHeader)
-            .replace(/'''''(.+?)'''''/mg, '<b><i>$1<i></b>')
+            .replace(/'''''(.+?)'''''/mg, '<b><i>$1</i></b>')
             .replace(/'''(.+?)'''/mg, '<b>$1</b>')
             .replace(/''(.+?)''/mg, '<i>$1</i>')
             .replace(/\[\[\[(.+?)]]]/mg, todo) //TODO: unknown link
