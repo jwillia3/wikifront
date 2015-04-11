@@ -1,12 +1,17 @@
-@import url(http://fonts.googleapis.com/css?family=Merriweather:400,400italic,700,700italic,900,900italic);
 @import url(http://fonts.googleapis.com/css?family=Fira+Mono);
 body {
     width: 720px;
     margin: 1em auto;
-    font: 400 13pt/1.5 Merriweather;
+    font: 400 11pt/1.5 Roboto;
+    font: 400 11pt/1.5 Fira Sans;
     background: #fff;
     color: #666;
-    hyphens: auto;
+    font-feature-settings: 'onum', 'zero';
+    ms-hyphens: auto;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: Fira Sans;
+    font-weight: 900;
 }
 h1 {
     text-align: center;
@@ -15,7 +20,6 @@ h1 {
 }
 h1, h2 {
     color: #48a;
-    font-weight: 900;
 }
 h1:before {
     font-family: wingdings;

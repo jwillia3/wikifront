@@ -1,5 +1,8 @@
 indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&callback=receivedWiki&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
+function encodeHtml(text) {
+    return text.replace(/&/mg, '&amp;').replace(/</mg, '&lt;').replace(/>/mg, '&gt;');
+}
 function makeWikiLink(url, name) {
     return '<a title="' + url + '" onclick=wikiClickHandler() ' +
         ' href=' + linkBase + encodeURIComponent(url) + '>' +
@@ -163,12 +166,18 @@ function renderWiki(name, wiki) {
     }
     function extractStep(wiki) {
         function handleExtraction(all, nowiki) {
-            extracts.push(nowiki);
+            extracts.push(encodeHtml(nowiki));
+            return '\x1a' + String.fromCharCode(extracts.length - 1);
+        }
+        function handleSourceExtraction(all, body) {
+            extracts.push('<pre>' + encodeHtml(body) + '</pre>');
             return '\x1a' + String.fromCharCode(extracts.length - 1);
         }
         return wiki
             .replace(/<nowiki>([^]*?)<\/nowiki>/mg, handleExtraction)
-            .replace(/<pre>([^]*?)<\/pre>/mg, handleExtraction)
+            .replace(/<pre[^>]*>([^]*?)<\/pre>/mg, handleSourceExtraction)
+            .replace(/<code[^>]*>([^]*?)<\/code>/mg, handleSourceExtraction)
+            .replace(/<source[^>]*>([^]*?)<\/source>/mg, handleSourceExtraction)
             .replace(/<math>([^]*?)<\/math>/mg, handleExtraction)
     }
     function reintroductionStep(wiki) {
@@ -180,7 +189,7 @@ function renderWiki(name, wiki) {
     function internalStep(wiki) {
         function handleHeader(all, level, text) {
             return '<h' + level.length +
-                ' id=' + text.replace(/ /g, '_').replace(/<.*>/, '') + '-wiki>' +
+                ' id=' + text.trim().replace(/ /g, '_').replace(/<.*>/, '') + '-wiki>' +
                 text + '</h' + level.length + '>';
         }
         function handleWikiLink(all, body) {
