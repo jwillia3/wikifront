@@ -4,6 +4,7 @@ selfBase = window.location.origin + window.location.pathname;
 wikiName = '';
 wikiText = '';
 wikiTarget = '';
+outHtml = '';
 
 function encodeHtml(text) {
     return text.replace(/&/mg, '&amp;').replace(/</mg, '&lt;').replace(/>/mg, '&gt;');
@@ -29,7 +30,6 @@ function renderWiki(name, wiki) {
         function handleTemplates(all, wiki) {
             var part = wiki.split('|');
             part[0] = part[0].toLowerCase().trim();
-            
             switch (part[0]) {
             case 'about':
                 return makeWikiLink(name + ' (disambiguation)',
@@ -69,6 +69,8 @@ function renderWiki(name, wiki) {
                 return '';
             case 'reflist': // TODO reflist
                 return '';
+            case 'see also':
+                return 'See also : ' + makeWikiLink(part[1], part[1]);
             case 'birth date and age':
             case 'start date and age':
                 return part[1];
@@ -125,7 +127,7 @@ function renderWiki(name, wiki) {
         function expand(subst) {
             var i = subst.charCodeAt(1);
             nReplacements++;
-            replacements[i] = replacements[i].replace(/\x1a./mg, expand);
+            replacements[i] = replacements[i].replace(/\x1a[^]/mg, expand);
             return replacements[i];
         }
         
@@ -144,7 +146,7 @@ function renderWiki(name, wiki) {
             nReplacements = 0;
             wiki = wiki.replace(/\{[{|]([^{}]+?)[}|]}/mg, replace);
         } while (nReplacements);
-        wiki = wiki.replace(/\x1a./mg, expand);
+        wiki = wiki.replace(/\x1a[^]/mg, expand);
         return wiki;
     }
     function extractStep(wiki) {
@@ -159,7 +161,7 @@ function renderWiki(name, wiki) {
         function handleReintroduction(subst) {
             return extracts[subst.charCodeAt(1)];
         }
-        return wiki.replace(/\x1a./mg, handleReintroduction);
+        return wiki.replace(/\x1a[^]/mg, handleReintroduction);
     }
     function internalStep(wiki) {
         function handleHeader(all, level, text) {
@@ -219,6 +221,7 @@ function renderWiki(name, wiki) {
         .replace(/<\/a>([-a-zA-Z']+)/gm, '$1</a>') // Fix pluralisation, past tense, whathaveyou
         .replace(/<br>(\s*<br>)+/gm, '<br>')
         .replace(/<ref([^\/]*?)\/>/gm, '<ref$1></ref>')
+    window.outHtml = wiki;
     return wiki;
 }
 function openPage(name) {
@@ -291,6 +294,9 @@ function toggleUnhandled() {
 function copyWikitext() {
     window.clipboardData.setData('Text', window.wikiText);
 }
+function copyHtml() {
+    window.clipboardData.setData('Text', window.outHtml);
+}
 function main() {
     if (!('toTitleCase' in String.prototype))
         String.prototype.toTitleCase = function() {
@@ -300,7 +306,8 @@ function main() {
     document.querySelector('#search').onkeydown = handleSearchEnter;
     document.querySelector('#menuButton').addEventListener('click', function() { toggleMenu() });
     document.addEventListener('keydown', handleShortcuts);
-    document.querySelector('#copyWikitext').addEventListener('click', function() { copyWikitext(); event.preventDefault(); });
+    document.querySelector('#copyWikitext').addEventListener('click', function() { copyWikitext(); event.preventDefault(); toggleMenu(); });
+    document.querySelector('#copyHtml').addEventListener('click', function() { copyHtml(); event.preventDefault(); toggleMenu(); });
     var query = {};
     window.location.search
         .substring(1)
