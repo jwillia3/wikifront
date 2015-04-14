@@ -255,6 +255,10 @@ function openPageNoHistory(name) {
     document.head.appendChild(dom);
 }
 function receivedWiki(json) {
+    if (!json || Object.keys(json.query.pages)[0] == -1) {
+        document.querySelector('#main > .copy').innerHTML = '<h2>Not Found</h2>';
+        return;
+    }
     var wiki = json.query.pages[Object.keys(json.query.pages)[0]].revisions[0]['*'];
     var html = renderWiki(window.wikiName, wiki);
     window.wikiText = wiki;
