@@ -16,23 +16,15 @@ function makeWikiLink(url, name) {
 function clearHistory() {
     document.querySelector('#history').innerHTML = '';
 }
-function clearQueue() {
-    document.querySelector('#history').innerHTML = '';
-}
-function deleteListItem(e) {
+function deleteHistoryItem(e) {
     e.target.parentElement.style.backgroundColor = 'red';
     e.target.parentElement.parentElement.removeChild(e.target.parentElement);
 }
-function insertIntoList(name, parent) {
-    var item = document.createElement('li');
-    item.innerHTML = '<span class=itemDelete onclick=deleteListItem(event)>&#x2716;</span>' + makeWikiLink(name, name);
-    parent.insertBefore(item, parent.firstChild);
-}
 function addToHistory(name) {
-    insertIntoList(name, document.querySelector('#history'));
-}
-function addToQueue(name) {
-    insertIntoList(name, document.querySelector('#queue'));
+    var parent = document.querySelector('#history');
+    var item = document.createElement('li');
+    item.innerHTML = '<span class=itemDelete onclick=deleteHistoryItem(event)>&#x2716;</span>' + makeWikiLink(name, name);
+    parent.insertBefore(item, parent.firstChild);
 }
 function renderWiki(name, wiki) {
     // See http://www.mediawiki.org/wiki/Markup_spec#Parser_outline
@@ -327,7 +319,6 @@ function main() {
     document.addEventListener('keydown', handleShortcuts);
     document.querySelector('#copyWikitext').addEventListener('click', function() { copyWikitext(); event.preventDefault(); });
     document.querySelector('#clearHistory').addEventListener('click', clearHistory);
-    document.querySelector('#clearQueue').addEventListener('click', clearQueue);
     var query = {};
     window.location.search
         .substring(1)
