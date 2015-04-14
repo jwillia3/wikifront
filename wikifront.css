@@ -53,20 +53,6 @@ h1:after {
 #devOptions {
     font-size: 50%;
 }
-#queue, #history {
-    margin: 0px;
-    padding: 0px;
-    list-style: none;
-}
-#queue li:hover, #history li:hover {
-    background: #aaa;
-}
-.itemDelete {
-    cursor: default;
-}
-#clearQueue, #clearHistory {
-    cursor: default;
-}
 #search {
     border: none;
     border-bottom: 1px solid #666;
@@ -81,7 +67,7 @@ a:link, a:visited, a:active {
     text-decoration: none;
 }
 a.external:link, a.external:visited, a.external:active {
-    color: #f44;
+    color: #44f;
 }
 
 /* Aid the readability of the category links at the bottom */
@@ -115,17 +101,6 @@ aside, ref {
 }
 article {
     background: #fff;
-}
-
-.columns2 > div {
-    width: 50%;
-    padding: 1em;
-    box-sizing: border-box;
-    float: left;
-}
-.columns2:after {
-    clear: both;
-    content: '';
 }
 .infobox {
     font-size: 90%;
