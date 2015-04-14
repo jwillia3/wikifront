@@ -9,22 +9,9 @@ function encodeHtml(text) {
     return text.replace(/&/mg, '&amp;').replace(/</mg, '&lt;').replace(/>/mg, '&gt;');
 }
 function makeWikiLink(url, name) {
-    return '<a title="' + url + '" onclick=wikiClickHandler() ' +
-        ' href=' + selfBase + '?q=' + encodeURIComponent(url) + '>' +
+    return '<a title="' + url +
+        '" href=' + selfBase + '?q=' + encodeURIComponent(url) + '>' +
         name + '</a>';
-}
-function clearHistory() {
-    document.querySelector('#history').innerHTML = '';
-}
-function deleteHistoryItem(e) {
-    e.target.parentElement.style.backgroundColor = 'red';
-    e.target.parentElement.parentElement.removeChild(e.target.parentElement);
-}
-function addToHistory(name) {
-    var parent = document.querySelector('#history');
-    var item = document.createElement('li');
-    item.innerHTML = '<span class=itemDelete onclick=deleteHistoryItem(event)>&#x2716;</span>' + makeWikiLink(name, name);
-    parent.insertBefore(item, parent.firstChild);
 }
 function renderWiki(name, wiki) {
     // See http://www.mediawiki.org/wiki/Markup_spec#Parser_outline
@@ -234,13 +221,7 @@ function renderWiki(name, wiki) {
         .replace(/<ref([^\/]*?)\/>/gm, '<ref$1></ref>')
     return wiki;
 }
-
 function openPage(name) {
-    if (window.wikiName)
-        addToHistory(window.wikiName);
-    openPageNoHistory(name);
-}
-function openPageNoHistory(name) {
     window.wikiName = name;
     window.wikiTarget = '';
     name = name.replace(/^(.*?)#(.*?)$/, function(all, newName, anchor) {
@@ -270,11 +251,7 @@ function receivedWiki(json) {
         else
             window.scrollTo(0, 0);
     } else
-        openPageNoHistory(html.redirect + '#' + window.wikiTarget);
-}
-function wikiClickHandler() {
-    openPage(event.target.title);
-    event.preventDefault();
+        openPage(html.redirect + '#' + window.wikiTarget);
 }
 function handleShortcuts() {
     if (event.keyCode == 27 || event.ctrlKey && event.char == '\u000b') { // Escape, ^K
@@ -322,7 +299,6 @@ function main() {
     document.querySelector('#menuButton').addEventListener('click', function() { toggleMenu() });
     document.addEventListener('keydown', handleShortcuts);
     document.querySelector('#copyWikitext').addEventListener('click', function() { copyWikitext(); event.preventDefault(); });
-    document.querySelector('#clearHistory').addEventListener('click', clearHistory);
     var query = {};
     window.location.search
         .substring(1)
@@ -335,7 +311,8 @@ function main() {
         });
     if (query.q) {
         toggleMenu('hidden');
-        openPage(query.q + (window.location.hash || ''));
+        var name = decodeURIComponent(query.q);
+        openPage(name + (window.location.hash || ''));
     } else {
         toggleMenu('visible');
         document.querySelector('#search').focus();
