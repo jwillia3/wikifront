@@ -240,10 +240,12 @@ function receivedWiki(json) {
         document.querySelector('#main > .copy').innerHTML = '<h2>Not Found</h2>';
         return;
     }
-    var wiki = json.query.pages[Object.keys(json.query.pages)[0]].revisions[0]['*'];
+    var thisPage = json.query.pages[Object.keys(json.query.pages)[0]];
+    var wiki = thisPage.revisions[0]['*'];
     var html = renderWiki(window.wikiName, wiki);
     window.wikiText = wiki;
     if (typeof(html) == 'string') {
+        document.querySelector('#main > .title').innerText = thisPage.title;
         document.querySelector('#main > .copy').innerHTML = html;
         var dom;
         if (dom = document.getElementById((window.wikiTarget || '') + '-wiki'))
