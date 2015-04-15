@@ -1,5 +1,6 @@
 indexUrl = 'http://en.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&callback=receivedWiki&titles=';
 linkBase = 'http://en.wikipedia.org/wiki/';
+imageBase = 'http://upload.wikimedia.org/wikipedia/commons/thumb/';
 selfBase = window.location.origin + window.location.pathname;
 wikiName = '';
 wikiText = '';
@@ -179,10 +180,17 @@ function renderWiki(name, wiki) {
         function handleWikiLink(all, body) {
             var part = body.split('|');
             var type = part[0].toLowerCase();
+            var m;
             // http://stackoverflow.com/a/4498885
             //TODO: MD5 hash on filenames
-//            if (/^file:/.test(type) || /^image:/.test(type))
-//                return '<img src=' + linkBase + part[0] + '>';
+            if ((m = /^file:(.*)/i.exec(part[0]) || /^image:/.exec(part[0]))) {
+                var filename = m[1].replace(/ /g, '_');
+                var digest = md5(filename);
+                var size = /\d+px$/.test(part[2])? part[2]: '220px';
+                var url = imageBase + digest[0] + '/' +
+                    digest.substring(0,2) + '/' + filename + '/' + size + '-' + filename;
+                return '<img src=' + url + '>';
+            }
             return part.length == 1? makeWikiLink(part[0], part[0]):
                 part.length == 2? makeWikiLink(part[0], part[1]):
                 makeWikiLink(part[0], part[0]);
