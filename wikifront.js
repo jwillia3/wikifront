@@ -28,18 +28,21 @@ function renderWiki(name, wiki) {
         var replacements = [];
         var nReplacements = 0;
         var leaf = '<span class=wingding>&#x0096;</span>';
-        function makeCitation() {
-            return '<div class=citation>' +
-                wiki.split('\n|').map(function(row) {
-                    row = row.split(/ *= */);
-                    row[0] = row[0].toLowerCase().trim();
-                    if (row.length != 2) return '';
-                    return row[0] == 'title'? '<b>' + row[1] + '</b>':
-                        row[0] == 'quote'? '<i>' + row[1] + '</i>':
-                        row[0] == 'url'? '<a href=' + row[1] + '>' + row[1] + '</a>':
-                        row[0] == 'accessdate'? '':
-                        row[1];
-                }).join('<br>') + '</div>';
+        function makeCitation(wiki) {
+            var items = {};
+            wiki.split('|').forEach(function(row) {
+                row = row.split(/ *= */);
+                row[0] = row[0].toLowerCase().trim();
+                items[row[0]] = row[1];
+            });
+            return (items.url || items.website?
+                    '<a class=external href=' + (items.url || items.website) + '>':
+                    '') +
+                items.title +
+                (items.url || items.website? '</a>': '') +
+                (items.pages? ' ' + items.pages: '') +
+                ' ' + (items.author || '') +
+                (items.quote? '<br>' + items.quote: '');
         }
         function handleTemplates(all, wiki) {
             var part = wiki.split('|');

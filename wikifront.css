@@ -65,8 +65,8 @@ a:link, a:visited, a:active {
     color: #f84;
     text-decoration: none;
 }
-a.external:link, a.external:visited, a.external:active {
-    color: #44f;
+a.external:link:after, a.external:visited:after, a.external:active:after {
+    content: '\2750';
 }
 
 /* Aid the readability of the category links at the bottom */
