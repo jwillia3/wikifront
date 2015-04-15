@@ -27,6 +27,19 @@ function renderWiki(name, wiki) {
         var replacements = [];
         var nReplacements = 0;
         var leaf = '<span class=wingding>&#x0096;</span>';
+        function makeCitation() {
+            return '<div class=citation>' +
+                wiki.split('\n|').map(function(row) {
+                    row = row.split(/ *= */);
+                    row[0] = row[0].toLowerCase().trim();
+                    if (row.length != 2) return '';
+                    return row[0] == 'title'? '<b>' + row[1] + '</b>':
+                        row[0] == 'quote'? '<i>' + row[1] + '</i>':
+                        row[0] == 'url'? '<a href=' + row[1] + '>' + row[1] + '</a>':
+                        row[0] == 'accessdate'? '':
+                        row[1];
+                }).join('<br>') + '</div>';
+        }
         function handleTemplates(all, wiki) {
             var part = wiki.split('|');
             part[0] = part[0].toLowerCase().trim();
@@ -39,8 +52,12 @@ function renderWiki(name, wiki) {
                         name + ' (Disambiguation).');
             case 'anchor':
                 return '<a id=' + part[1] + '></a>';
+            case 'citation':
+                return makeCitation(wiki);
             case 'citation needed': //TODO citations
                 return '<sup>Citation Needed</sup>';
+            case 'commons': // TODO: Commons
+                break;
             case 'efn':
             case 'refn': //TODO: handle separately
             case 'efn-ua': //TODO: handle separately
@@ -77,18 +94,8 @@ function renderWiki(name, wiki) {
             default:
                 if (/-stub$/i.test(wiki)) // ignore stubs
                     return '';
-                if (/^cite/i.test(wiki)) // ignore stubs
-                    return '<div class=citation>' +
-                        wiki.split('\n|').map(function(row) {
-                            row = row.split(/ *= */);
-                            row[0] = row[0].toLowerCase().trim();
-                            if (row.length != 2) return '';
-                            return row[0] == 'title'? '<b>' + row[1] + '</b>':
-                                row[0] == 'quote'? '<i>' + row[1] + '</i>':
-                                row[0] == 'url'? '<a href=' + row[1] + '>' + row[1] + '</a>':
-                                row[0] == 'accessdate'? '':
-                                row[1];
-                        }).join('<br>') + '</div>';
+                if (/^cite/i.test(wiki))
+                    return makeCitation(wiki);
                 if (/commands$/.test(wiki))
                     return makeWikiLink(wiki, leaf + wiki);
                 if (/^infobox/i.test(wiki))
@@ -221,6 +228,7 @@ function renderWiki(name, wiki) {
         .replace(/<\/a>([-a-zA-Z']+)/gm, '$1</a>') // Fix pluralisation, past tense, whathaveyou
         .replace(/<br>(\s*<br>)+/gm, '<br>')
         .replace(/<ref([^\/]*?)\/>/gm, '<ref$1></ref>')
+        // TODO: Move refs to dedicated column
     window.outHtml = wiki;
     return wiki;
 }
