@@ -179,6 +179,7 @@ function renderWiki(name, wiki) {
         var nReplacements = 0;
         function handleWikiImage(all, filename, part) {
             filename = filename.replace(/ /g, '_');
+            filename = filename[0].toUpperCase() + filename.substring(1);
             var digest = md5(filename);
             var size = '220px';
             var text = '';
@@ -200,10 +201,9 @@ function renderWiki(name, wiki) {
         }
         function handleWikiLink(all, body) {
             var part = body.split('|');
-            var type = part[0].toLowerCase();
             var m;
             // http://stackoverflow.com/a/4498885
-            if ((m = /^file:(.*)/i.exec(part[0]) || /^image:/.exec(part[0])))
+            if ((m = /^file:(.*)/i.exec(part[0]) || /^image:(.*)/i.exec(part[0])))
                 return handleWikiImage(all, m[1], part);
             return part.length == 1? makeWikiLink(part[0], part[0]):
                 part.length == 2? makeWikiLink(part[0], part[1]):
@@ -229,7 +229,7 @@ function renderWiki(name, wiki) {
         
         do {
             nReplacements = 0;
-            wiki = wiki.replace(/\[\[([^[\]]+?)\]]/mg, replace);
+            wiki = wiki.replace(/\[\[((?:[^[\]]|\[[^[])+?)]]/mg, replace);
         } while (nReplacements);
         wiki = wiki.replace(/\x1a[^]/mg, expand);
         return wiki
