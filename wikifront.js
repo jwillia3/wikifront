@@ -172,6 +172,24 @@ function renderWiki(name, wiki) {
         return wiki.replace(/\x1a[^]/mg, handleReintroduction);
     }
     function internalStep(wiki) {
+        var replacements = [];
+        var nReplacements = 0;
+        function handleWikiImage(all, filename, part) {
+            filename = filename.replace(/ /g, '_');
+            var digest = md5(filename);
+            var size = '220px';
+            var text = '';
+            if (/\d+px$/.test(part[2])) {
+                size = part[2];
+                text = part[3] || '';
+            } else
+                text = part[2] || '';
+            var url = imageBase + digest[0] + '/' +
+                digest.substring(0,2) + '/' + filename + '/' + size + '-' + filename;
+            return (text? '<aside>': '') +
+                '<img src=' + url + '>' +
+                (text? text + '</aside>': '');
+        }
         function handleHeader(all, level, text) {
             return '<h' + level.length +
                 ' id=' + text.trim().replace(/ /g, '_').replace(/<.*>/, '') + '-wiki>' +
@@ -182,15 +200,8 @@ function renderWiki(name, wiki) {
             var type = part[0].toLowerCase();
             var m;
             // http://stackoverflow.com/a/4498885
-            //TODO: MD5 hash on filenames
-            if ((m = /^file:(.*)/i.exec(part[0]) || /^image:/.exec(part[0]))) {
-                var filename = m[1].replace(/ /g, '_');
-                var digest = md5(filename);
-                var size = /\d+px$/.test(part[2])? part[2]: '220px';
-                var url = imageBase + digest[0] + '/' +
-                    digest.substring(0,2) + '/' + filename + '/' + size + '-' + filename;
-                return '<img src=' + url + '>';
-            }
+            if ((m = /^file:(.*)/i.exec(part[0]) || /^image:/.exec(part[0])))
+                return handleWikiImage(all, m[1], part);
             return part.length == 1? makeWikiLink(part[0], part[0]):
                 part.length == 2? makeWikiLink(part[0], part[1]):
                 makeWikiLink(part[0], part[0]);
@@ -201,13 +212,29 @@ function renderWiki(name, wiki) {
             var name = split != -1? body.substring(split + 1): url;
             return makeExternalLink(url, name);
         }
+        function replace(all, wiki) {
+            replacements.push(handleWikiLink(all, wiki));
+            nReplacements++;
+            return '\x1a' + String.fromCharCode(replacements.length - 1);
+        }
+        function expand(subst) {
+            var i = subst.charCodeAt(1);
+            nReplacements++;
+            replacements[i] = replacements[i].replace(/\x1a[^]/mg, expand);
+            return replacements[i];
+        }
+        
+        do {
+            nReplacements = 0;
+            wiki = wiki.replace(/\[\[([^[\]]+?)\]]/mg, replace);
+        } while (nReplacements);
+        wiki = wiki.replace(/\x1a[^]/mg, expand);
         return wiki
             .replace(/^(=+)(.+?)\1/mg, handleHeader)
             .replace(/'''''(.+?)'''''/mg, '<b><i>$1</i></b>')
             .replace(/'''(.+?)'''/mg, '<b>$1</b>')
             .replace(/''(.+?)''/mg, '<i>$1</i>')
             .replace(/\[\[\[(.+?)]]]/mg, todo) //TODO: unknown link
-            .replace(/\[\[(.+?)]]/mg, handleWikiLink)
             .replace(/\[(.+)?]/mg, handleExternalLink)
             .replace(/__.+?__/mg, '') // ignore magic words
     }
