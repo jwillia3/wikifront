@@ -31,9 +31,10 @@ function renderWiki(name, wiki) {
         function makeCitation(wiki) {
             var items = {};
             wiki.split('|').forEach(function(row) {
-                row = row.split(/ *= */);
-                row[0] = row[0].toLowerCase().trim();
-                items[row[0]] = row[1];
+                row = /([^=]*)=(.*)/.exec(row);
+                if (!row) return;
+                row[1] = row[1].toLowerCase().trim();
+                items[row[1]] = row[2];
             });
             return (items.url || items.website?
                     '<a class=external href=' + (items.url || items.website) + '>':
@@ -95,6 +96,9 @@ function renderWiki(name, wiki) {
             case 'birth date and age':
             case 'start date and age':
                 return part[1];
+            case 'nobr':
+            case 'nowrap':
+                return '<span style=white-space:nowarap>' + part[1] + '</span>';
             default:
                 if (/-stub$/i.test(wiki)) // ignore stubs
                     return '';
