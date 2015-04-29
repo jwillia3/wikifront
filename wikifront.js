@@ -242,7 +242,7 @@ function renderWiki(name, wiki) {
             .replace(/'''(.+?)'''/mg, '<b>$1</b>')
             .replace(/''(.+?)''/mg, '<i>$1</i>')
             .replace(/\[\[\[(.+?)]]]/mg, todo) //TODO: unknown link
-            .replace(/\[(.+)?]/mg, handleExternalLink)
+            .replace(/\[(.+?)]/mg, handleExternalLink)
             .replace(/__.+?__/mg, '') // ignore magic words
     }
     function blockStep(wiki) {
