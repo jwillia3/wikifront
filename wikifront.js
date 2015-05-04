@@ -121,9 +121,9 @@ function renderWiki(name, wiki) {
         function handleTables(all, wiki) {
             function handleRow(wiki) {
                 wiki = wiki
-                    .replace(/\|\|? +([^|]*) *\| *([^|]+)/mg, '<td $1>$2</td>')
-                    .replace(/\|\|? +([^|]*)/mg, '<td>$1</td>')
-                    .replace(/!!? +([^!]*)/mg, '<th>$1</th>')
+                    .replace(/\|\|?\s+([^|]*)\s+\|\s*([^|]+)/mg, '<td $1>$2</td>')
+                    .replace(/\|\|?\s+([^|]*)/mg, '<td>$1</td>')
+                    .replace(/!!?\s+([^!]*)/mg, '<th>$1</th>')
                 
                 return '<tr>' + wiki + '</tr>';
             }
