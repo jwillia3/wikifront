@@ -121,17 +121,41 @@ function renderWiki(name, wiki) {
         function handleTables(all, wiki) {
             function handleRow(wiki) {
                 wiki = wiki
-                    .replace(/\|\|?\s+([^|]*)\s+\|\s*([^|]+)/mg, '<td $1>$2</td>')
-                    .replace(/\|\|?\s+([^|]*)/mg, '<td>$1</td>')
-                    .replace(/!!?\s+([^!]*)/mg, '<th>$1</th>')
-                
+                    .replace(/\n([^|!])/mg, ' $1')
+                    .replace(/[|][|]/mg, '\n| ')
+                    .replace(/!!/mg, '\n! ')
+                    .replace(/^[|] *([^|!\n]*) *[|] *([^|\n]*)/mg, '\n<td $1>$2</td>')
+                    .replace(/^[|!] *([^|!\n]*) *[|!] *([^|!\n]*)/mg, '\n<th $1>$2</th>')
+                    .replace(/[|] *([^|!\n]*)/mg, '\n<td>$1</td>')
+                    .replace(/[!] *([^|!\n]*)/mg, '\n<th>$1</th>')
                 return '<tr>' + wiki + '</tr>';
             }
+            var replacements = [];
+            var nReplacements = 0;
+            function replace(all) {
+                replacements.push(all);
+                nReplacements++;
+                return '\x1b' + String.fromCharCode(replacements.length - 1);
+            }
+            function expand(subst) {
+                return replacements[subst.charCodeAt(1)];
+            }
+            
             //TODO nested tables e.g. ASCII#ASCII_control_code_chart
-            var rows = wiki.split(/\|-/mg)
+            var caption = '';
+            wiki = wiki.replace(/\|\+(.*)\n?/m, function(all, text) {
+                 caption = '<caption>' + text + '</caption>';
+                 return '';
+            })
+            do {
+                nReplacements = 0;
+                wiki = wiki.replace(/(\[\[.+?]])|(\[.+?])/mg, replace);
+            } while (nReplacements);
+            var rows = wiki.split(/\|-.*/mg); // TODO row style is ignored
             var style = rows.shift();
-            rows = rows.map(handleRow);
-            return '<table ' + style + '>' + rows.join('') + '</table>';
+            rows = rows.map(handleRow).join('');
+            rows = rows.replace(/\x1b[^]/mg, expand);
+            return '<table ' + style + '>' + caption + rows + '</table>';
         }
         function replace(all, wiki) {
             var handle = all[1] == '|'? handleTables: handleTemplates;
